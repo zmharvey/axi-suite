@@ -68,6 +68,8 @@ clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill &&
 
 This writes `~/.claude/skills/<tool>/SKILL.md`. Now when you ask Claude Code about ClickUp/Supabase/Slack/Drive/Gmail, it reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
 
+Reference copies of exactly what each tool registers live in [`skills/`](skills/) — the canonical source is each tool's `src/skill.js`.
+
 ## Optional: compile to standalone binaries
 
 Slightly faster cold start (~10ms vs ~24ms). Requires [Bun](https://bun.sh):
