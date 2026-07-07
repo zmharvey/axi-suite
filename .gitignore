@@ -1,0 +1,9 @@
+node_modules/
+# compiled Bun binaries (platform-specific, build locally)
+*-bin
+# never commit secrets or local config
+.env
+*.token
+**/config.json
+# OS cruft
+.DS_Store

@@ -1,0 +1,22 @@
+{
+  "name": "slack-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant Slack CLI — token-efficient TOON output, contextual next-step hints, fewer turns than the Slack MCP.",
+  "type": "module",
+  "bin": {
+    "slack-axi": "./bin/slack-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8"
+  }
+}

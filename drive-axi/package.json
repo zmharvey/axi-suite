@@ -1,0 +1,22 @@
+{
+  "name": "drive-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant Google Drive CLI — token-efficient TOON output, contextual next-step hints.",
+  "type": "module",
+  "bin": {
+    "drive-axi": "./bin/drive-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8"
+  }
+}

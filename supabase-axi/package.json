@@ -1,0 +1,22 @@
+{
+  "name": "supabase-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant Supabase CLI — token-efficient TOON output, contextual next-step hints, fewer turns than the Supabase MCP.",
+  "type": "module",
+  "bin": {
+    "supabase-axi": "./bin/supabase-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8"
+  }
+}
