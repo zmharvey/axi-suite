@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXI vs MCP — benchmarks + daily-cost simulation</title>
+<style>
+  :root {
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --bg: #F4F6F7; --surface: #FFFFFF; --surface-2: #EAEFF1; --ink: #17212B;
+    --muted: #556673; --faint: #8193A0; --hairline: #D9E1E5;
+    --accent: #0B7A72; --accent-ink: #075B55; --accent-soft: rgba(11,122,114,0.12);
+    --heavy: #9E6B34; --heavy-ink: #82571F; --heavy-soft: rgba(158,107,52,0.14);
+    --shadow: 0 1px 2px rgba(23,33,43,0.05), 0 8px 24px rgba(23,33,43,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0D141A; --surface: #131E27; --surface-2: #1A2833; --ink: #E7EEF3;
+      --muted: #94A6B3; --faint: #63757F; --hairline: #23303B;
+      --accent: #33C2B2; --accent-ink: #64D6C8; --accent-soft: rgba(51,194,178,0.15);
+      --heavy: #D89A5B; --heavy-ink: #E6B074; --heavy-soft: rgba(216,154,91,0.16);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.28);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg:#F4F6F7;--surface:#FFFFFF;--surface-2:#EAEFF1;--ink:#17212B;--muted:#556673;--faint:#8193A0;--hairline:#D9E1E5;
+    --accent:#0B7A72;--accent-ink:#075B55;--accent-soft:rgba(11,122,114,0.12);--heavy:#9E6B34;--heavy-ink:#82571F;--heavy-soft:rgba(158,107,52,0.14);
+    --shadow:0 1px 2px rgba(23,33,43,0.05),0 8px 24px rgba(23,33,43,0.04);
+  }
+  :root[data-theme="dark"] {
+    --bg:#0D141A;--surface:#131E27;--surface-2:#1A2833;--ink:#E7EEF3;--muted:#94A6B3;--faint:#63757F;--hairline:#23303B;
+    --accent:#33C2B2;--accent-ink:#64D6C8;--accent-soft:rgba(51,194,178,0.15);--heavy:#D89A5B;--heavy-ink:#E6B074;--heavy-soft:rgba(216,154,91,0.16);
+    --shadow:0 1px 2px rgba(0,0,0,0.3),0 10px 30px rgba(0,0,0,0.28);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+  code { font-family:var(--mono); font-size:0.86em; background:var(--surface-2); padding:0.1em 0.4em; border-radius:4px; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+
+  header.top { padding: 52px 0 20px; }
+  .eyebrow { font-family:var(--mono); font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent-ink); margin:0 0 12px; }
+  h1 { font-family:var(--mono); font-weight:600; font-size:clamp(26px,4.5vw,36px); line-height:1.1; letter-spacing:-0.02em; text-wrap:balance; margin:0 0 12px; }
+  .lede { font-size:17px; color:var(--muted); margin:0; max-width:62ch; }
+
+  /* tabs */
+  nav.tabs { position:sticky; top:0; z-index:10; display:flex; flex-wrap:wrap; gap:4px; padding:12px 0; margin:20px 0 8px; background:var(--bg); border-bottom:1px solid var(--hairline); }
+  nav.tabs button {
+    font-family:var(--mono); font-size:13px; color:var(--muted); background:transparent; border:1px solid transparent;
+    padding:7px 13px; border-radius:8px; cursor:pointer; transition:background .15s,color .15s;
+  }
+  nav.tabs button:hover { color:var(--ink); background:var(--surface-2); }
+  nav.tabs button[aria-selected="true"] { color:var(--accent-ink); background:var(--accent-soft); font-weight:600; }
+
+  section.tab { display:none; padding: 24px 0 56px; }
+  section.tab[data-active="true"] { display:block; }
+  h2 { font-family:var(--mono); font-weight:600; font-size:20px; letter-spacing:-0.01em; margin:0 0 6px; }
+  p.sub { color:var(--muted); margin:6px 0 20px; max-width:64ch; }
+  .note { font-size:13.5px; color:var(--muted); margin-top:16px; line-height:1.5; } .note b { color:var(--ink); }
+
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14.5px; }
+  th,td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--hairline); white-space:nowrap; }
+  thead th { font-family:var(--mono); font-size:11px; letter-spacing:0.04em; color:var(--faint); text-transform:uppercase; font-weight:600; }
+  thead th:not(:first-child), td:not(:first-child) { text-align:right; }
+  td { font-variant-numeric:tabular-nums; }
+  td:first-child { color:var(--muted); }
+  td.mcp { font-family:var(--mono); color:var(--heavy-ink); }
+  td.axi { font-family:var(--mono); color:var(--accent-ink); font-weight:600; }
+  td.win { font-family:var(--mono); font-weight:600; color:var(--accent-ink); }
+  td.lose { font-family:var(--mono); font-weight:600; color:var(--heavy-ink); }
+  td.flat { font-family:var(--mono); color:var(--faint); }
+  tbody tr:last-child td { border-bottom:none; }
+  a { color:var(--accent-ink); }
+
+  /* delta bars (overview) */
+  .bars { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+  .brow { display:grid; grid-template-columns:96px 1fr 78px; align-items:center; gap:12px; }
+  .brow .lab { font-family:var(--mono); font-size:13px; color:var(--muted); }
+  .btrack { position:relative; height:22px; background:var(--surface-2); border-radius:5px; overflow:hidden; }
+  .bfill { position:absolute; top:0; bottom:0; }
+  .bfill.pos { left:50%; background:var(--accent); border-radius:0 5px 5px 0; }
+  .bfill.neg { right:50%; background:var(--heavy); border-radius:5px 0 0 5px; }
+  .bmid { position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--hairline); }
+  .brow .val { font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; text-align:right; }
+
+  /* stat tiles */
+  .tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--hairline); border:1px solid var(--hairline); border-radius:12px; overflow:hidden; margin:18px 0; }
+  .tile { background:var(--surface); padding:18px 16px; }
+  .tile .n { font-family:var(--mono); font-weight:600; font-size:clamp(20px,3.4vw,28px); letter-spacing:-0.02em; color:var(--accent-ink); font-variant-numeric:tabular-nums; display:block; line-height:1; }
+  .tile .l { font-size:12.5px; color:var(--muted); margin-top:8px; display:block; line-height:1.35; }
+
+  /* simulation */
+  .simgrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px; }
+  .card { background:var(--surface); border:1px solid var(--hairline); border-radius:12px; padding:18px; box-shadow:var(--shadow); }
+  .card h3 { font-family:var(--mono); font-size:13px; margin:0 0 14px; letter-spacing:0.02em; color:var(--faint); text-transform:uppercase; }
+  .uses { display:flex; flex-direction:column; gap:10px; }
+  .use { display:grid; grid-template-columns:1fr 76px; align-items:center; gap:10px; }
+  .use label { font-size:14px; color:var(--ink); }
+  .use input { font-family:var(--mono); font-size:14px; width:100%; padding:6px 8px; border:1px solid var(--hairline); border-radius:6px; background:var(--bg); color:var(--ink); text-align:right; font-variant-numeric:tabular-nums; }
+  .use input:focus { border-color:var(--accent); outline:none; }
+
+  .result { display:flex; flex-direction:column; gap:16px; }
+  .headline { font-family:var(--mono); font-weight:600; font-size:clamp(22px,4vw,30px); letter-spacing:-0.02em; color:var(--accent-ink); line-height:1.1; }
+  .headline .sm { font-size:14px; color:var(--muted); font-weight:400; display:block; margin-top:6px; }
+  .cmp { display:flex; flex-direction:column; gap:10px; }
+  .cmp .row { }
+  .cmp .rlab { display:flex; justify-content:space-between; font-family:var(--mono); font-size:13px; margin-bottom:4px; }
+  .cmp .rlab .who { color:var(--muted); } .cmp .rlab .amt { font-variant-numeric:tabular-nums; font-weight:600; }
+  .cmp .rlab .amt.m { color:var(--heavy-ink); } .cmp .rlab .amt.a { color:var(--accent-ink); }
+  .stack { height:26px; border-radius:6px; overflow:hidden; display:flex; background:var(--surface-2); }
+  .seg { height:100%; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:4px; font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:3px; }
+
+  footer { padding: 28px 0 60px; border-top:1px solid var(--hairline); }
+  footer p { font-family:var(--mono); font-size:12.5px; color:var(--faint); line-height:1.7; margin:0; }
+
+  @media (max-width:640px){ .simgrid{grid-template-columns:1fr;} .tiles{grid-template-columns:1fr;} .brow{grid-template-columns:80px 1fr 64px;} }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">AXI vs MCP · measured</p>
+    <h1>Six connectors, benchmarked — and what it costs you per day.</h1>
+    <p class="lede">Each AXI-style CLI against a faithful re-impl of its MCP tool surface: same read-only tasks, same live account, same model (Claude Sonnet 5), 5 tasks × 3 runs × 2 conditions per connector. Real cost, tokens, turns, and success from the API's own accounting. Then a simulation of a typical day.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="realworld">Real usage</button>
+    <button role="tab" data-tab="github">GitHub</button>
+    <button role="tab" data-tab="clickup">ClickUp</button>
+    <button role="tab" data-tab="supabase">Supabase</button>
+    <button role="tab" data-tab="slack">Slack</button>
+    <button role="tab" data-tab="drive">Drive</button>
+    <button role="tab" data-tab="gmail">Gmail</button>
+    <button role="tab" data-tab="sim">Simulation</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="tab" data-tab="overview" data-active="true">
+    <h2>The token win is universal. The dollar win scales with the MCP.</h2>
+    <p class="sub">Across all five, the AXI uses far fewer tokens (48–94%). Whether it's <em>cheaper in dollars</em> depends on how heavy the MCP's tool schema is — because a light schema caches for ~nothing (0.1× price), while the AXI's tiny prefix sits below the cache threshold and pays full price.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Connector</th><th>MCP tools</th><th>Success M→A</th><th>$/task M→A</th><th>Cost Δ</th><th>Tokens Δ</th></tr></thead>
+        <tbody id="ovTable"></tbody>
+      </table>
+    </div>
+    <h2 style="margin-top:34px;">Cost change by connector (AXI vs MCP)</h2>
+    <p class="sub">Right/teal = the AXI is cheaper. Left/clay = the AXI costs more. The heavier the MCP, the bigger the AXI's dollar advantage.</p>
+    <div class="bars" id="ovBars"></div>
+    <p class="note"><b>Read this two ways.</b> If you care about <b>context budget</b> (how much of the window MCP schemas eat, how much you can hold at once), the AXI wins everywhere — 48–94% fewer tokens. The <b>dollar</b> column only matters for pay-as-you-go API use — there the AXI wins big on heavy connectors (ClickUp) and is a wash-to-slightly-worse on light ones (Slack, Drive), purely because a small MCP schema caches nearly free while the AXI's tiny prefix is below the cache floor. <b>On a Claude plan, dollars are irrelevant — what counts is usage against your session/weekly limits, i.e. tokens</b>, where the AXI wins on every connector. See the <b>Simulation</b> tab. And it all <em>understates</em> the AXI: each MCP was measured alone; with several enabled at once, every call carries <em>all</em> their schemas — the AXIs add zero.</p>
+  </section>
+
+  <!-- REAL USAGE (all connectors on) -->
+  <section class="tab" data-tab="realworld">
+    <h2>Real usage: all six connectors enabled at once.</h2>
+    <p class="sub">The per-connector tabs load one MCP in isolation — the conservative case. But you run <em>every</em> connector at once, so each API call carries all six schemas (~27,000 tokens, 157 tools) whether the task uses them or not. The AXIs add zero — they ride one <code>run_axi</code> bash tool. Same six tasks (one per connector), same live accounts, same model.</p>
+    <div class="tiles">
+      <div class="tile"><span class="n">48%</span><span class="l">lower cost per task</span></div>
+      <div class="tile"><span class="n">93%</span><span class="l">fewer input tokens</span></div>
+      <div class="tile"><span class="n">89 vs 72%</span><span class="l">task success — AXI higher</span></div>
+    </div>
+    <div class="scroll">
+      <table class="bench">
+        <thead><tr><th>Per task, averaged</th><th>All 6 MCPs on</th><th>AXIs (run_axi)</th><th>Δ</th></tr></thead>
+        <tbody>
+          <tr><td>Tool schema in context</td><td class="mcp">27,094 tok · 157 tools</td><td class="axi">505 tok · 1</td><td class="win">54× less</td></tr>
+          <tr><td>Task success</td><td class="mcp">72%</td><td class="axi">89%</td><td class="win">+17 pts</td></tr>
+          <tr><td>Cost / task</td><td class="mcp">$0.0264</td><td class="axi">$0.0137</td><td class="win">48% lower</td></tr>
+          <tr><td>Input tokens / task</td><td class="mcp">87,839</td><td class="axi">5,904</td><td class="win">93% lower</td></tr>
+          <tr><td>Tool-call turns</td><td class="mcp">3.17</td><td class="axi">2.89</td><td class="win">fewer</td></tr>
+          <tr><td>Wall-time / task</td><td class="mcp">8.5s</td><td class="axi">6.3s</td><td class="win">faster</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><b>This is the honest answer to "why is the AXI pricier on Slack/Drive?"</b> In isolation it's a caching quirk (a light MCP schema caches for ~free; the AXI's tiny prefix is below the cache floor). But in your real setup every call drags all six schemas — so the AXI is cheaper on <em>everything</em>. The MCP schema here is <em>fully cached</em> (amortized at 0.1× — a fair, conservative comparison), and the AXI still wins because 27K cached tokens per call cost more than its ~6K fresh footprint. The MCP's lower success reflects <b>tool overload</b> (157 tools → occasional wrong picks — it got Supabase off-by-one and stalled on the Gmail task); both conditions were dinged by one hard two-step task.</p>
+  </section>
+
+  <!-- per-connector tabs injected by JS -->
+  <section class="tab" data-tab="github"></section>
+  <section class="tab" data-tab="clickup"></section>
+  <section class="tab" data-tab="supabase"></section>
+  <section class="tab" data-tab="slack"></section>
+  <section class="tab" data-tab="drive"></section>
+  <section class="tab" data-tab="gmail"></section>
+
+  <!-- SIMULATION -->
+  <section class="tab" data-tab="sim">
+    <h2>A typical day, priced both ways.</h2>
+    <p class="sub">Set how many times a day an agent hits each connector (seeded with an estimate of your typical day). You're on a plan, so this is framed as <em>usage against your session &amp; weekly limits</em> — measured in tokens processed, as a percentage — not dollars. Everything's editable.</p>
+    <div class="simgrid">
+      <div class="card">
+        <h3>Agent interactions / day</h3>
+        <div class="uses" id="useInputs"></div>
+      </div>
+      <div class="card">
+        <div class="result">
+          <div>
+            <div class="headline" id="simHeadline">—</div>
+          </div>
+          <div class="cmp">
+            <div class="row">
+              <div class="rlab"><span class="who">MCPs · tokens / week</span><span class="amt m" id="mcpMo">—</span></div>
+              <div class="stack" id="mcpStack"></div>
+            </div>
+            <div class="row">
+              <div class="rlab"><span class="who">AXIs · tokens / week</span><span class="amt a" id="axiMo">—</span></div>
+              <div class="stack" id="axiStack"></div>
+            </div>
+          </div>
+          <div class="legend" id="simLegend"></div>
+          <div class="note" id="simTokens"></div>
+        </div>
+      </div>
+    </div>
+    <p class="note"><b>Method:</b> tokens/week = daily × 5 working days. Per-connector token counts are the measured input tokens/task from each benchmark (Sonnet 5). Plan limits track usage that scales with tokens processed, so fewer tokens = more headroom. This is <em>conservative</em> two ways: each MCP was measured alone (with several enabled, every call also carries the combined schema noted above), and cached tokens count for less than fresh ones — the AXIs are leaner on the fresh input + output that dominate either way.</p>
+  </section>
+
+  <footer>
+    <p>
+      Measured 2026-07-07 · Claude Sonnet 5 · 5 read-only tasks × 3 runs × 2 conditions per connector · live accounts.<br>
+      Cost/turns/tokens from the API's usage accounting. Bugs found + fixed during QA (clickup subtasks default, slack search flag-parsing, slack channel pagination, supabase project scoping).<br>
+      Wall-times were measured on the Node build; the AXIs now ship as compiled binaries (~2–3× faster cold-start) — tokens, cost, and success are identical, so those figures stand.<br>
+      Pattern &amp; benchmark inspiration: <a href="https://axi.md">axi.md</a>.
+    </p>
+  </footer>
+</div>
+
+<script>
+  const DATA = {
+    github:   {name:"GitHub",   tools:39, schema:5683,  mcpSucc:100, axiSucc:100, mcpCost:0.0048, axiCost:0.0042, mcpTok:11743, axiTok:1745, mcpTurns:2.00, axiTurns:2.00, mcpTime:5.93, axiTime:4.12,
+      take:"gh-axi is the reference AXI — the one that started all this. Mid-heavy MCP (39 tools) → 85% fewer tokens, 12% cheaper, and faster. Its `repo view` also separates open issues from PRs (970 vs 54), sidestepping GitHub's open_issues_count footgun that lumps them into one misleading 1,024."},
+    clickup:  {name:"ClickUp",  tools:51, schema:11629, mcpSucc:100, axiSucc:100, mcpCost:0.0553, axiCost:0.0088, mcpTok:62713, axiTok:3610, mcpTurns:3.60, axiTurns:2.67, mcpTime:29.5, axiTime:6.5,
+      take:"The heaviest MCP (51 tools, 11,629 tokens of always-on schema) — so the biggest AXI win across the board: 84% cheaper, 94% fewer tokens, 4.6× faster."},
+    supabase: {name:"Supabase", tools:29, schema:5064,  mcpSucc:87,  axiSucc:100, mcpCost:0.0088, axiCost:0.0053, mcpTok:12719, axiTok:2378, mcpTurns:2.00, axiTurns:2.00, mcpTime:2.79, axiTime:3.45,
+      take:"Mid-weight MCP → 40% cheaper, 81% fewer tokens. The AXI also edged success (100% vs 87%): its clean `count:` line beat the MCP miscounting a raw 23-item project list."},
+    slack:    {name:"Slack",    tools:19, schema:3522,  mcpSucc:100, axiSucc:100, mcpCost:0.0031, axiCost:0.0057, mcpTok:7861,  axiTok:2491, mcpTurns:2.13, axiTurns:2.00, mcpTime:3.96, axiTime:3.76,
+      take:"Light MCP → the honest counter-example: 68% fewer tokens, but ~1.8× the dollar cost. Slack's small schema caches at 0.1×, while the AXI's tiny prefix is below the cache minimum and pays full price."},
+    drive:    {name:"Drive",    tools:8,  schema:1265,  mcpSucc:100, axiSucc:100, mcpCost:0.0064, axiCost:0.0066, mcpTok:5062,  axiTok:2623, mcpTurns:2.40, axiTurns:2.40, mcpTime:5.04, axiTime:5.21,
+      take:"Lightest MCP (8 tools) → 48% fewer tokens, cost a wash (−3%). Not much schema to save on."},
+    gmail:    {name:"Gmail",    tools:13, schema:2082,  mcpSucc:100, axiSucc:100, mcpCost:0.0057, axiCost:0.0055, mcpTok:6016,  axiTok:2327, mcpTurns:2.00, axiTurns:2.00, mcpTime:2.96, axiTime:3.27,
+      take:"Light-mid MCP → 61% fewer tokens, cost tied (+4%)."},
+  };
+  const ORDER = ["github","clickup","supabase","slack","drive","gmail"];
+  const COLORS = { github:"#6E6AA8", clickup:"#0B7A72", supabase:"#2E8B94", slack:"#9E6B34", drive:"#B98A4E", gmail:"#5A7D8C" };
+  const pct = n => (n>=0?"−":"+") + Math.abs(n).toFixed(0) + "%"; // cost Δ: positive delta = cheaper = shown as −%
+  const money = n => "$"+n.toFixed(2);
+  const money4 = n => "$"+n.toFixed(4);
+
+  // Overview table + bars
+  const ovT = document.getElementById("ovTable"), ovB = document.getElementById("ovBars");
+  const maxAbs = Math.max(...ORDER.map(k=>Math.abs(costDelta(k))));
+  function costDelta(k){ const d=DATA[k]; return (1 - d.axiCost/d.mcpCost)*100; } // + = cheaper
+  function tokDelta(k){ const d=DATA[k]; return (1 - d.axiTok/d.mcpTok)*100; }
+  ORDER.forEach(k=>{
+    const d=DATA[k], cd=costDelta(k), td=tokDelta(k);
+    const cheaper = cd>=0;
+    ovT.insertAdjacentHTML("beforeend",
+      `<tr><td>${d.name}</td><td class="mcp">${d.tools}</td><td>${d.mcpSucc}→${d.axiSucc}%</td>`+
+      `<td>${money4(d.mcpCost)}→${money4(d.axiCost)}</td>`+
+      `<td class="${cheaper?'win':'lose'}">${cheaper?d.mcpCost>d.axiCost?(Math.round(cd)+'% cheaper'):'same':(Math.round(-cd)+'% more')}</td>`+
+      `<td class="win">${Math.round(td)}% fewer</td></tr>`);
+    const w = (Math.abs(cd)/maxAbs*50).toFixed(1);
+    ovB.insertAdjacentHTML("beforeend",
+      `<div class="brow"><div class="lab">${d.name}</div>`+
+      `<div class="btrack"><div class="bmid"></div>`+
+      (cheaper?`<div class="bfill pos" style="width:${w}%"></div>`:`<div class="bfill neg" style="width:${w}%"></div>`)+
+      `</div><div class="val" style="color:${cheaper?'var(--accent-ink)':'var(--heavy-ink)'}">${cheaper?Math.round(cd)+'% cheaper':Math.round(-cd)+'% more'}</div></div>`);
+  });
+
+  // Per-connector tabs
+  ORDER.forEach(k=>{
+    const d=DATA[k], cd=costDelta(k), td=tokDelta(k);
+    const cheaper=cd>=0;
+    const sec=document.querySelector(`section.tab[data-tab="${k}"]`);
+    sec.innerHTML =
+      `<h2>${d.name} — clickup-axi–style, measured</h2>`+
+      `<p class="sub">${d.take}</p>`+
+      `<div class="tiles">`+
+        `<div class="tile"><span class="n">${cheaper?(d.mcpCost>d.axiCost?Math.round(cd)+'%':'~0%'):'+'+Math.round(-cd)+'%'}</span><span class="l">${cheaper&&d.mcpCost>d.axiCost?'lower cost / task':(cheaper?'cost (tied)':'higher cost / task')}</span></div>`+
+        `<div class="tile"><span class="n">${Math.round(td)}%</span><span class="l">fewer input tokens</span></div>`+
+        `<div class="tile"><span class="n">${d.axiSucc}%</span><span class="l">task success (MCP ${d.mcpSucc}%)</span></div>`+
+      `</div>`+
+      `<div class="scroll"><table><thead><tr><th>Per task, avg</th><th>ClickUp MCP</th><th>${k}-axi</th><th>Δ</th></tr></thead><tbody>`.replace("ClickUp MCP",d.name+" MCP")+
+        row("Task success", d.mcpSucc+"%", d.axiSucc+"%", d.axiSucc>=d.mcpSucc?"same/▲":"▼", d.axiSucc>=d.mcpSucc)+
+        row("Cost / task", money4(d.mcpCost), money4(d.axiCost), cheaper&&d.mcpCost>d.axiCost?Math.round(cd)+"% lower":(cheaper?"~tied":Math.round(-cd)+"% higher"), cheaper&&d.mcpCost>d.axiCost)+
+        row("Input tokens / task", d.mcpTok.toLocaleString(), d.axiTok.toLocaleString(), Math.round(td)+"% lower", true)+
+        row("Tool-call turns", d.mcpTurns.toFixed(2), d.axiTurns.toFixed(2), (d.mcpTurns-d.axiTurns).toFixed(2)+" fewer", d.axiTurns<=d.mcpTurns)+
+        row("Wall-time / task", d.mcpTime+"s", d.axiTime+"s", d.axiTime<=d.mcpTime?(d.mcpTime/d.axiTime).toFixed(1)+"× faster":"+"+(d.axiTime-d.mcpTime).toFixed(1)+"s", d.axiTime<=d.mcpTime)+
+        row("Tool schema in context", d.schema.toLocaleString()+" tok", "~515 tok", Math.round(d.schema/515)+"× less", true)+
+      `</tbody></table></div>`;
+  });
+  function row(lab,m,a,delta,good){
+    return `<tr><td>${lab}</td><td class="mcp">${m}</td><td class="axi">${a}</td><td class="${good?'win':'lose'}">${delta}</td></tr>`;
+  }
+
+  // Simulation
+  // Estimate of Zach's typical day (Supabase-heavy: 23 projects / core data work;
+  // ClickUp + Slack high; Gmail + Drive moderate). Editable.
+  const SEED = { github:20, clickup:25, slack:30, gmail:15, supabase:30, drive:10 };
+  const WORKDAYS = 5;
+  const useWrap = document.getElementById("useInputs");
+  ORDER.forEach(k=>{
+    useWrap.insertAdjacentHTML("beforeend",
+      `<div class="use"><label>${DATA[k].name}</label><input type="number" min="0" step="1" id="use-${k}" value="${SEED[k]}"></div>`);
+  });
+  const leg = document.getElementById("simLegend");
+  ORDER.forEach(k=> leg.insertAdjacentHTML("beforeend",`<span><span class="dot" style="background:${COLORS[k]}"></span>${DATA[k].name}</span>`));
+
+  const COMBINED_SCHEMA = ORDER.reduce((s,k)=>s+DATA[k].schema,0); // ~23,562: all 5 MCP schemas at once
+  function recompute(){
+    let mcpTokDay=0, axiTokDay=0;
+    const segM=[], segA=[];
+    ORDER.forEach(k=>{
+      const u = Math.max(0, Number(document.getElementById("use-"+k).value)||0);
+      const d=DATA[k];
+      const mt=u*d.mcpTok, at=u*d.axiTok;
+      mcpTokDay+=mt; axiTokDay+=at;
+      segM.push({k,v:mt}); segA.push({k,v:at});
+    });
+    const redPct = mcpTokDay>0 ? Math.round((1-axiTokDay/mcpTokDay)*100) : 0;
+    const mult = axiTokDay>0 ? (mcpTokDay/axiTokDay) : 0;
+    document.getElementById("mcpMo").textContent = fmtM(mcpTokDay*WORKDAYS)+" tok";
+    document.getElementById("axiMo").textContent = fmtM(axiTokDay*WORKDAYS)+" tok";
+    document.getElementById("simHeadline").innerHTML =
+      `${redPct}% less usage<span class="sm">The AXIs push <b>${mult.toFixed(1)}× fewer tokens</b> through the model for the same day's work — that much more headroom before you hit a session or weekly limit.</span>`;
+    const scale = Math.max(mcpTokDay, axiTokDay, 1);
+    drawStack("mcpStack", segM, scale);
+    drawStack("axiStack", segA, scale);
+    document.getElementById("simTokens").innerHTML =
+      `<b>Plus the always-on schema tax:</b> with all five MCPs enabled at once, every agent call — even ones unrelated to these tools — carries ~${COMBINED_SCHEMA.toLocaleString()} tokens of their combined tool schemas before you ask anything. With the AXIs that's <b>0</b> — usage reclaimed on every single interaction, on top of the per-call reductions above.`;
+  }
+  function drawStack(id, segs, scaleTotal){
+    const el=document.getElementById(id); el.innerHTML="";
+    const total = Math.max(scaleTotal, 0.0001);
+    segs.forEach(s=>{ if(s.v<=0) return; const w=(s.v/total*100); el.insertAdjacentHTML("beforeend",`<div class="seg" style="width:${w}%;background:${COLORS[s.k]}"></div>`); });
+  }
+  function fmtM(n){ return n>=1e6 ? (n/1e6).toFixed(1)+"M" : n>=1e3 ? (n/1e3).toFixed(0)+"k" : Math.round(n); }
+  ORDER.forEach(k=> document.getElementById("use-"+k).addEventListener("input", recompute));
+  recompute();
+
+  // Tabs
+  const tabs=document.getElementById("tabs");
+  tabs.addEventListener("click", e=>{
+    const b=e.target.closest("button[data-tab]"); if(!b) return;
+    tabs.querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected", x===b));
+    const t=b.dataset.tab;
+    document.querySelectorAll("section.tab").forEach(s=> s.setAttribute("data-active", s.dataset.tab===t));
+    window.scrollTo({top:0,behavior:"instant"});
+  });
+</script>
+
+</body>
+</html>

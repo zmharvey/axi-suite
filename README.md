@@ -15,7 +15,7 @@ Measured across the whole fleet, all connectors enabled (the realistic case), sa
 | Input tokens / task | 87,839 | **5,904** (93% lower) |
 | Task success | 72% | **89%** |
 
-Full benchmark write-up (interactive): the case-study artifact accompanying this suite.
+Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation).
 
 ## The tools
 
