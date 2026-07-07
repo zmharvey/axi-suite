@@ -21,8 +21,8 @@ Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) 
 
 | CLI | Wraps | Reads | Writes |
 |---|---|---|---|
-| `clickup-axi` | ClickUp API v2 | spaces, tasks, search | create/update/comment task |
-| `supabase-axi` | Supabase Management API | projects, tables, SQL, advisors | `db query` (SQL) |
+| `clickup-axi` | ClickUp API v2 | spaces, tasks, search, time entries | create/update/comment task, `time` start/stop/log |
+| `supabase-axi` | Supabase Management API | projects, tables, SQL, advisors, migrations, functions | `db query` (SQL), `migrations apply` (draft-first), `functions deploy` (draft-first) |
 | `slack-axi` | Slack Web API | search, channels, read, threads, catchup | `send` (draft-first) |
 | `drive-axi` | Google Drive API | recent, search, ls, read | — read-only |
 | `gmail-axi` | Gmail API | search, read, thread | `draft` (never sends) |
@@ -30,6 +30,8 @@ Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) 
 Every write is **draft-first** — it prints what it *would* do and requires an explicit `--confirm` to act. Nothing mutates or sends without you asking for it.
 
 > For GitHub, use the community [`gh-axi`](https://www.npmjs.com/package/gh-axi) (`npm i -g gh-axi`) — same idea, wraps the `gh` CLI.
+
+**Scope:** these aren't 1:1 MCP replacements — they cover the day-to-day (search, read, create, update, plus the extras above) rather than every admin operation each MCP exposes (e.g. ClickUp docs/folders/tags/dependencies, Supabase branching/logs/project lifecycle, Slack canvases/reactions/scheduling, Gmail labels). Keep the relevant MCP connector around for anything not listed here — or open an issue/PR if there's a specific command you want added, the shell is built to make that quick.
 
 ## Requirements
 

@@ -10,8 +10,8 @@ Run `clickup-axi` for a dashboard, or `clickup-axi <command> --help` for a speci
 ## Commands
 ```
 usage: clickup-axi [command] [args] [flags]
-commands[6]:
-  (none)=dashboard, space, task, search, auth, skill
+commands[7]:
+  (none)=dashboard, space, task, time, search, auth, skill
 flags[3]:
   -W/--workspace <id> (after command), --help, -v/-V/--version
 examples:
@@ -19,6 +19,7 @@ examples:
   clickup-axi space list
   clickup-axi space view <space_id>
   clickup-axi task list --list <list_id> --assignee me
+  clickup-axi time start <task_id> --desc "..."
   clickup-axi search --assignee me --status "in progress"
 ```
 
