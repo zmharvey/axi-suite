@@ -32,15 +32,17 @@ flags{view}:
   --comments, --full (untruncated description)
 flags{create}:
   --list <list_id> (required), --name <text> (required), --desc <text>,
-  --status <name>, --priority <urgent|high|normal|low>, --assignee <me|user_id> (repeatable)
+  --status <name>, --priority <urgent|high|normal|low>, --assignee <me|user_id> (repeatable),
+  --parent <task_id> (creates it as a subtask; parent must be in the same list)
 flags{update}:
-  --name, --desc, --status, --priority
+  --name, --desc, --status, --priority, --parent <task_id> (reparents/converts to a subtask)
 flags{comment}:
   --text <text> (required)
 examples:
   clickup-axi task list --list 901000123456 --assignee me
   clickup-axi task view 86b1abcde --comments
   clickup-axi task create --list 901000123456 --name "Draft proposal" --priority high
+  clickup-axi task create --list 901000123456 --name "Write intro" --parent 86b1abcde
   clickup-axi task update 86b1abcde --status "in progress"
   clickup-axi task comment 86b1abcde --text "Shipped, ready for review"`;
 
@@ -66,6 +68,7 @@ const viewSchema = [
   custom("priority", (t) => t.priority?.priority ?? "none"),
   custom("due", (t) => (t.due_date ? relMs(t.due_date) : "none")),
   custom("list", (t) => t.list?.name ?? "none"),
+  custom("parent", (t) => t.parent ?? "none"),
   custom("updated", (t) => relMs(t.date_updated)),
   field("url"),
 ];
@@ -182,6 +185,7 @@ async function taskCreate(args) {
     status: getFlag(args, "--status"),
     priority: mapPriority(getFlag(args, "--priority")),
     assignees: assignees.length ? assignees.map(Number) : undefined,
+    parent: getFlag(args, "--parent"),
   };
   const task = await client.post(`/list/${listId}/task`, prune(body));
   return renderOutput([
@@ -199,10 +203,11 @@ async function taskUpdate(args) {
     description: getFlag(args, "--desc"),
     status: getFlag(args, "--status"),
     priority: mapPriority(getFlag(args, "--priority")),
+    parent: getFlag(args, "--parent"),
   });
   if (Object.keys(body).length === 0)
     throw new AxiError("Nothing to update", "VALIDATION_ERROR", [
-      "Pass at least one of --name, --desc, --status, --priority",
+      "Pass at least one of --name, --desc, --status, --priority, --parent",
     ]);
   let task;
   try {
