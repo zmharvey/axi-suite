@@ -11,10 +11,17 @@ examples:
   slack-axi search "deploy failed in:#eng"
   slack-axi search "from:@jane budget" --limit 30`;
 
+const fileSummary = (m) =>
+  (m.files || [])
+    .map((f) => `${f.id}:${f.name || f.title || "?"} (${f.permalink || "no link"})`)
+    .join(" | ") || "none";
+
 const schema = [
   custom("channel", (m) => (m.channel?.name ? "#" + m.channel.name : m.channel?.id || "?")),
+  custom("channel_id", (m) => m.channel?.id || ""),
   custom("from", (m) => m.username || m.user || "?"),
   custom("when", (m) => relTs(m.ts)),
+  custom("files", fileSummary),
   custom("text", (m) => oneLine(m.text, 140)),
 ];
 
@@ -42,6 +49,9 @@ export async function searchCommand(args) {
   return renderOutput([
     countLine(total, matches.length < total ? `showing ${matches.length}` : undefined),
     renderList("matches", matches, schema),
-    renderHelp(["Run `slack-axi read <#channel|id>` to see surrounding context"]),
+    renderHelp([
+      "Run `slack-axi read <channel_id> --limit 20` to see surrounding context",
+      "If a result has files, use its channel_id with `read` to see them there too",
+    ]),
   ]);
 }

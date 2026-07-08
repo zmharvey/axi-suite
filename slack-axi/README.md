@@ -6,6 +6,8 @@ An [AXI](https://axi.md)-style CLI for Slack — token-efficient TOON output, ne
 
 Create a Slack app with **user-token scopes**, install it to your workspace, and copy the User OAuth Token (`xoxp-…`). Suggested scopes: `search:read`, `channels:read`, `groups:read`, `channels:history`, `groups:history`, `im:history`, `mpim:history`, `users:read`, and `chat:write` (to post as you).
 
+File attachments: their name, id, and permalink show up in `search`/`read`/`thread` output with the scopes above (no extra scope needed). Add `files:read` only if you want to fetch a file's actual content — not implemented yet, since it needs the scope first.
+
 ```sh
 export SLACK_TOKEN=xoxp-...
 ```

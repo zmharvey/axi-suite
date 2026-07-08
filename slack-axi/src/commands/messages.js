@@ -4,11 +4,17 @@ import { getFlag, getPositional, hasFlag } from "../args.js";
 import { AxiError } from "../errors.js";
 import { custom, renderList, renderHelp, renderOutput, countLine, relTs, oneLine } from "../toon.js";
 
+const fileSummary = (m) =>
+  (m.files || [])
+    .map((f) => `${f.id}:${f.name || f.title || "?"} (${f.permalink || "no link"})`)
+    .join(" | ") || "";
+
 const msgSchema = [
   custom("from", (m) => m.user || m.username || m.bot_id || "?"),
   custom("when", (m) => relTs(m.ts)),
   custom("ts", (m) => m.ts),
   custom("replies", (m) => (m.reply_count ? String(m.reply_count) : "")),
+  custom("files", fileSummary),
   custom("text", (m) => oneLine(m.text, 160)),
 ];
 
