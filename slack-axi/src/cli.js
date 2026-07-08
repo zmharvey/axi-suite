@@ -7,6 +7,7 @@ import { homeCommand } from "./commands/home.js";
 import { searchCommand, SEARCH_HELP } from "./commands/search.js";
 import { channelsCommand } from "./commands/channels.js";
 import { readCommand, threadCommand } from "./commands/messages.js";
+import { fileCommand, FILE_HELP } from "./commands/file.js";
 import { catchupCommand, CATCHUP_HELP } from "./commands/catchup.js";
 import { sendCommand, SEND_HELP } from "./commands/send.js";
 import { authCommand, AUTH_HELP } from "./auth.js";
@@ -16,8 +17,8 @@ export const DESCRIPTION =
   "Agent-ergonomic wrapper around the Slack Web API. Prefer this over the Slack MCP for search / read / post.";
 
 export const TOP_HELP = `usage: slack-axi [command] [args] [flags]
-commands[9]:
-  (none)=whoami, search, channels, read, thread, catchup, send, auth, skill
+commands[10]:
+  (none)=whoami, search, channels, read, thread, file, catchup, send, auth, skill
 flags:
   --help, -v/-V/--version
 examples:
@@ -26,10 +27,18 @@ examples:
   slack-axi channels
   slack-axi read #general
   slack-axi thread #general 1782872886.854179
+  slack-axi file F0BGPJLUU0Y
   slack-axi send #general --text "..." --confirm
 `;
 
-const COMMAND_HELP = { search: SEARCH_HELP, catchup: CATCHUP_HELP, send: SEND_HELP, auth: AUTH_HELP, skill: SKILL_HELP };
+const COMMAND_HELP = {
+  search: SEARCH_HELP,
+  file: FILE_HELP,
+  catchup: CATCHUP_HELP,
+  send: SEND_HELP,
+  auth: AUTH_HELP,
+  skill: SKILL_HELP,
+};
 
 const META = {
   tool: "slack-axi",
@@ -45,6 +54,7 @@ const COMMANDS = {
   channels: (args) => channelsCommand(args),
   read: (args) => readCommand(args),
   thread: (args) => threadCommand(args),
+  file: (args) => fileCommand(args),
   catchup: (args) => catchupCommand(args),
   send: (args) => sendCommand(args),
   auth: (args) => authCommand(args, META),
