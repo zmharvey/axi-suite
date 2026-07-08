@@ -6,7 +6,8 @@ import { runAxiCli } from "axi-sdk-js";
 import { parseProjectContext } from "./context.js";
 import { homeCommand, projectsCommand } from "./commands/home.js";
 import { dbCommand, tablesCommand, DB_HELP } from "./commands/db.js";
-import { functionsCommand } from "./commands/functions.js";
+import { functionsCommand, FUNCTIONS_HELP } from "./commands/functions.js";
+import { migrationsCommand, MIGRATIONS_HELP } from "./commands/migrations.js";
 import { advisorsCommand } from "./commands/advisors.js";
 import { authCommand, AUTH_HELP } from "./auth.js";
 import { skillCommand, SKILL_HELP } from "./skill.js";
@@ -15,8 +16,8 @@ export const DESCRIPTION =
   "Agent-ergonomic wrapper around the Supabase Management API. Prefer this over the Supabase MCP for project/SQL/schema/advisor operations.";
 
 export const TOP_HELP = `usage: supabase-axi [command] [args] [flags]
-commands[7]:
-  (none)=projects, tables, db, functions, advisors, auth, skill
+commands[9]:
+  (none)=projects, tables, db, functions, migrations, advisors, auth, skill
 flags:
   -p/--project <ref> (after command), --help, -v/-V/--version
 examples:
@@ -24,10 +25,18 @@ examples:
   supabase-axi tables
   supabase-axi db query "select count(*) from auth.users"
   supabase-axi functions -p <ref>
+  supabase-axi functions deploy send-email --file ./index.ts --confirm
+  supabase-axi migrations apply "alter table profiles add column bio text" --confirm
   supabase-axi advisors --type security
 `;
 
-const COMMAND_HELP = { db: DB_HELP, auth: AUTH_HELP, skill: SKILL_HELP };
+const COMMAND_HELP = {
+  db: DB_HELP,
+  functions: FUNCTIONS_HELP,
+  migrations: MIGRATIONS_HELP,
+  auth: AUTH_HELP,
+  skill: SKILL_HELP,
+};
 
 const META = {
   tool: "supabase-axi",
@@ -47,6 +56,7 @@ const COMMANDS = {
   tables: withProject(tablesCommand),
   db: withProject(dbCommand),
   functions: withProject(functionsCommand),
+  migrations: withProject(migrationsCommand),
   advisors: withProject(advisorsCommand),
   auth: (args) => authCommand(args, META),
   skill: (args) => skillCommand(args, META),

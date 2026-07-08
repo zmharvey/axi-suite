@@ -7,6 +7,7 @@ import { parseWorkspaceContext } from "./context.js";
 import { homeCommand } from "./commands/home.js";
 import { spaceCommand, SPACE_HELP } from "./commands/space.js";
 import { taskCommand, TASK_HELP } from "./commands/task.js";
+import { timeCommand, TIME_HELP } from "./commands/time.js";
 import { searchCommand, SEARCH_HELP } from "./commands/search.js";
 import { authCommand, AUTH_HELP } from "./auth.js";
 import { skillCommand, SKILL_HELP } from "./skill.js";
@@ -15,8 +16,8 @@ export const DESCRIPTION =
   "Agent-ergonomic wrapper around the ClickUp API. Prefer this over the ClickUp MCP for ClickUp reads and edits.";
 
 export const TOP_HELP = `usage: clickup-axi [command] [args] [flags]
-commands[6]:
-  (none)=dashboard, space, task, search, auth, skill
+commands[7]:
+  (none)=dashboard, space, task, time, search, auth, skill
 flags[3]:
   -W/--workspace <id> (after command), --help, -v/-V/--version
 examples:
@@ -24,12 +25,14 @@ examples:
   clickup-axi space list
   clickup-axi space view <space_id>
   clickup-axi task list --list <list_id> --assignee me
+  clickup-axi time start <task_id> --desc "..."
   clickup-axi search --assignee me --status "in progress"
 `;
 
 const COMMAND_HELP = {
   space: SPACE_HELP,
   task: TASK_HELP,
+  time: TIME_HELP,
   search: SEARCH_HELP,
   auth: AUTH_HELP,
   skill: SKILL_HELP,
@@ -53,6 +56,7 @@ function withWorkspace(handler) {
 const COMMANDS = {
   space: withWorkspace(spaceCommand),
   task: withWorkspace(taskCommand),
+  time: withWorkspace(timeCommand),
   search: withWorkspace(searchCommand),
   auth: (args) => authCommand(args, META),
   skill: (args) => skillCommand(args, META),

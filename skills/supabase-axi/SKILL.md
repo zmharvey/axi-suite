@@ -10,8 +10,8 @@ Run `supabase-axi` for a dashboard, or `supabase-axi <command> --help` for a spe
 ## Commands
 ```
 usage: supabase-axi [command] [args] [flags]
-commands[7]:
-  (none)=projects, tables, db, functions, advisors, auth, skill
+commands[9]:
+  (none)=projects, tables, db, functions, migrations, advisors, auth, skill
 flags:
   -p/--project <ref> (after command), --help, -v/-V/--version
 examples:
@@ -19,6 +19,8 @@ examples:
   supabase-axi tables
   supabase-axi db query "select count(*) from auth.users"
   supabase-axi functions -p <ref>
+  supabase-axi functions deploy send-email --file ./index.ts --confirm
+  supabase-axi migrations apply "alter table profiles add column bio text" --confirm
   supabase-axi advisors --type security
 ```
 
