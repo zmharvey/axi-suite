@@ -60,15 +60,15 @@ Run `auth login` once per tool — it prompts for a token with hidden paste and 
 
 Verify: `clickup-axi` (or any tool with no args) prints a dashboard.
 
-## Use inside Claude Code
+## Use inside Claude Code / Codex
 
-Each tool ships a Claude Code skill so the agent discovers and prefers it automatically:
+Each tool ships a skill so the agent discovers and prefers it automatically — one command registers it with **every** skills-capable agent found on your machine (Claude Code at `~/.claude/`, Codex at `~/.codex/`; it skips whichever isn't installed):
 
 ```bash
 clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill
 ```
 
-This writes `~/.claude/skills/<tool>/SKILL.md`. Now when you ask Claude Code about ClickUp/Supabase/Slack/Drive/Gmail, it reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
+This writes `~/.claude/skills/<tool>/SKILL.md` and/or `~/.codex/skills/<tool>/SKILL.md`. Restart your agent session afterward to pick it up. Now when you ask about ClickUp/Supabase/Slack/Drive/Gmail, the agent reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
 
 Reference copies of exactly what each tool registers live in [`skills/`](skills/) — the canonical source is each tool's `src/skill.js`.
 
