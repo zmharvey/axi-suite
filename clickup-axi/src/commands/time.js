@@ -131,17 +131,25 @@ async function timeLog(args, ctx) {
   return renderOutput(["logged: yes", renderDetail("entry", res?.data ?? res, entrySchema)]);
 }
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
 async function timeList(args, ctx) {
   const workspaceId = await resolveWorkspaceId(ctx);
   const limit = Number(getFlag(args, "--limit")) || 50;
   const startFlag = getFlag(args, "--start");
   const endFlag = getFlag(args, "--end");
+  // The API doesn't guarantee recency ordering or a bounded default window,
+  // so without explicit bounds an unbounded query can surface old entries
+  // ahead of new ones. Default to the last 30 days and sort client-side.
   const query = {
-    start_date: startFlag ? Date.parse(startFlag) : undefined,
+    start_date: startFlag ? Date.parse(startFlag) : Date.now() - THIRTY_DAYS_MS,
     end_date: endFlag ? Date.parse(endFlag) : undefined,
   };
   const res = await client.get(`/team/${workspaceId}/time_entries`, query);
-  const entries = (res?.data || []).slice(0, limit);
+  const entries = (res?.data || [])
+    .slice()
+    .sort((a, b) => Number(b.start) - Number(a.start))
+    .slice(0, limit);
   return renderOutput([
     countLine(entries.length),
     entries.length ? renderList("entries", entries, entrySchema) : "entries: none",
