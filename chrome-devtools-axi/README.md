@@ -14,6 +14,24 @@ chrome-devtools-axi auth login --browser-url http://localhost:9222
 
 There's no credential to store — `auth login` just checks the port answers and remembers the URL. Override per-command with `--browser-url`, or set `$CHROME_DEVTOOLS_AXI_URL`.
 
+### Keeping the debug port up reliably
+
+This tool deliberately never launches a browser (see below), so *something* needs to start Chrome with `--remote-debugging-port` before you can use it. Don't repurpose your daily-driver browser for this — launch a dedicated instance with its own `--user-data-dir` so it doesn't touch your real cookies/logins, and check-before-launch so repeat calls are a no-op:
+
+```sh
+#!/usr/bin/env bash
+PORT=9222
+curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PORT/json/version" | grep -q 200 && exit 0
+CHROME_BIN=$(command -v google-chrome || command -v chromium || \
+  echo "$HOME/.cache/ms-playwright"/chromium-*/chrome-linux64/chrome)
+"$CHROME_BIN" --remote-debugging-port=$PORT \
+  --user-data-dir="$HOME/.config/chrome-devtools-axi/profile" \
+  --headless=new --no-first-run --no-default-browser-check &
+disown
+```
+
+No system Chrome/Chromium? `npx playwright install chromium` downloads one to `~/.cache/ms-playwright`, which the snippet above already checks as a fallback. An agent can run a script like this itself before any `chrome-devtools-axi` command — check the port, launch only if needed, then proceed. That's the intended workflow: you (or your agent) own starting the browser; this tool only ever drives whatever's already listening.
+
 ## Commands
 
 ```
