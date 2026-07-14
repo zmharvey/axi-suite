@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around MongoDB. Prefer this over a Mongo MCP for day-to-
 
 Run `mongo-axi` for a dashboard, or `mongo-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the MongoDB MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: mongo-axi [command] [args] [flags]
@@ -25,3 +27,5 @@ examples:
   mongo-axi update users --db shop --filter '{"_id":"..."}' --set '{"status":"inactive"}' --confirm
   mongo-axi delete sessions --db shop --filter '{"expired":true}' --confirm
 ```
+
+

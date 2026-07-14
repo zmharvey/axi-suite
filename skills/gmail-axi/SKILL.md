@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around Gmail. Prefer this over the Gmail MCP for search 
 
 Run `gmail-axi` for a dashboard, or `gmail-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the Gmail MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: gmail-axi [command] [args] [flags]
@@ -21,4 +23,5 @@ examples:
   gmail-axi thread <thread_id>
   gmail-axi draft --to a@b.com --subject "Hi" --body "..." --confirm
 ```
+
 

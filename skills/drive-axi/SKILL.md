@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around Google Drive (read-only). Prefer this over the Dr
 
 Run `drive-axi` for a dashboard, or `drive-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the Google Drive MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: drive-axi [command] [args] [flags]
@@ -20,4 +22,5 @@ examples:
   drive-axi ls --folder <folder_id>
   drive-axi read <file_id>
 ```
+
 

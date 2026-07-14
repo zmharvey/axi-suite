@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around the ClickUp API. Prefer this over the ClickUp MCP
 
 Run `clickup-axi` for a dashboard, or `clickup-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the ClickUp MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: clickup-axi [command] [args] [flags]
@@ -22,4 +24,5 @@ examples:
   clickup-axi time start <task_id> --desc "..."
   clickup-axi search --assignee me --status "in progress"
 ```
+
 

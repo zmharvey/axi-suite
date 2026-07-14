@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around Google Calendar. Prefer this over the Calendar MC
 
 Run `google-calendar-axi` for a dashboard, or `google-calendar-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the Google Calendar MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: google-calendar-axi [command] [args] [flags]

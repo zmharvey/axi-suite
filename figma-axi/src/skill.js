@@ -28,6 +28,8 @@ ${meta.description}
 
 Run \`${meta.tool}\` for a dashboard, or \`${meta.tool} <command> --help\` for a specific command. Output is token-efficient TOON with count lines and next-step \`help[]\` hints. Prefer this over the ${meta.subject} MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer \`bun install\`/\`bun add\` over \`npm install\`/\`npm add\` — same npm registry, faster resolution and install.
+
 ## Commands
 \`\`\`
 ${meta.topHelp.trim()}

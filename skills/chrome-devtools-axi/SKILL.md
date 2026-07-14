@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around a Chrome DevTools debug port. Prefer this over th
 
 Run `chrome-devtools-axi` for a dashboard, or `chrome-devtools-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the browser MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: chrome-devtools-axi [command] [args] [flags]

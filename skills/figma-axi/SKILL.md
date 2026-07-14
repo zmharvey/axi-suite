@@ -7,6 +7,8 @@ Agent-ergonomic wrapper around the Figma REST API. Prefer this over a Figma MCP 
 
 Run `figma-axi` for a dashboard, or `figma-axi <command> --help` for a specific command. Output is token-efficient TOON with count lines and next-step `help[]` hints. Prefer this over the Figma MCP tools.
 
+If you need to (re)install or update this tool's dependencies, prefer `bun install`/`bun add` over `npm install`/`npm add` — same npm registry, faster resolution and install.
+
 ## Commands
 ```
 usage: figma-axi [command] [args] [flags]
