@@ -24,14 +24,14 @@ The token acts as **you** — searches see what you can see, and `send` (if enab
 
 ---
 
-## Google Drive + Gmail (`drive-axi`, `gmail-axi`)
+## Google Drive + Gmail + Calendar (`drive-axi`, `gmail-axi`, `google-calendar-axi`)
 
-Both share one Google Cloud OAuth "Desktop app" client and one refresh token. ~5 minutes, once.
+All three share one Google Cloud OAuth "Desktop app" client and one refresh token. ~5 minutes, once.
 
 ### 1. Create an OAuth client
 
 1. Go to <https://console.cloud.google.com/> and create (or pick) a project.
-2. **APIs & Services → Enabled APIs** → enable **Google Drive API** and **Gmail API**.
+2. **APIs & Services → Enabled APIs** → enable **Google Drive API**, **Gmail API**, and **Google Calendar API**.
 3. **APIs & Services → OAuth consent screen**: configure it. For a personal/internal tool, "Internal" (if you're on Google Workspace) is simplest — only people in your Workspace can use this client. Otherwise choose "External" and add yourself as a test user.
 4. **APIs & Services → Credentials → Create Credentials → OAuth client ID → Application type: Desktop app**. Create.
 5. Download the client — you get a **client ID** and **client secret**.
@@ -46,9 +46,11 @@ Save the two values to `~/.config/google-axi/oauth.json`:
 
 ### 3. Consent once
 
-Run `drive-axi auth login` (or `gmail-axi auth login`). It opens a browser consent flow on a local loopback port, you approve, and it writes a refresh token to `~/.config/google-axi/token.json`. Both tools share this — you only do it once.
+Run `drive-axi auth login` (or `gmail-axi auth login` / `google-calendar-axi auth login` — any of the three). It opens a browser consent flow on a local loopback port, you approve, and it writes a refresh token to `~/.config/google-axi/token.json`. All three tools share this — you only do it once.
 
-Scopes requested: `drive.readonly`, `gmail.readonly`, `gmail.compose` (compose = create drafts only; there is no send scope, so Gmail can never send).
+Scopes requested: `drive.readonly`, `gmail.readonly`, `gmail.compose` (compose = create drafts only; there is no send scope, so Gmail can never send), `calendar.events` (read + create/delete events; no calendar-admin/ACL scope).
+
+If you already ran `auth login` before Calendar support was added, re-run it once to pick up the new scope — Google's consent screen only grants what was requested in that specific approval, so an old token won't have `calendar.events` until you re-consent.
 
 ### Handing this to teammates
 

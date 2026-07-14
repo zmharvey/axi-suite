@@ -1,6 +1,6 @@
 # AXI Suite
 
-Five **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, and Gmail. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
+Nine **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, Gmail, Google Calendar, MongoDB, Figma, and Chrome DevTools. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
 
 ## Why this exists
 
@@ -15,7 +15,7 @@ Measured across the whole fleet, all connectors enabled (the realistic case), sa
 | Input tokens / task | 87,839 | **5,904** (93% lower) |
 | Task success | 72% | **89%** |
 
-Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation).
+Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation). These numbers predate `google-calendar-axi`/`mongo-axi`/`figma-axi`/`chrome-devtools-axi` — the shape of the result holds (fixed per-connector MCP schema tax vs. one small always-on CLI tool), but the exact figures above haven't been re-measured against the full nine-tool set yet.
 
 ## The tools
 
@@ -26,6 +26,10 @@ Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) 
 | `slack-axi` | Slack Web API | search, channels, read, threads, catchup | `send` (draft-first) |
 | `drive-axi` | Google Drive API | recent, search, ls, read | — read-only |
 | `gmail-axi` | Gmail API | search, read, thread | `draft` (never sends) |
+| `google-calendar-axi` | Google Calendar API | today, calendars, events list/view | `events create`/`delete` (draft-first) |
+| `mongo-axi` | MongoDB driver (direct connection, no HTTP API) | db, collections, find, count, indexes | `insert`/`update`/`delete` (draft-first) |
+| `figma-axi` | Figma REST API | file, node, image (export URLs), comments, teams, projects | `comment` (draft-first) |
+| `chrome-devtools-axi` | Chrome DevTools Protocol (via a local session) | session, navigate, screenshot, content | `click`/`type`/`eval` — acts on a live page, no dry-run |
 
 Every write is **draft-first** — it prints what it *would* do and requires an explicit `--confirm` to act. Nothing mutates or sends without you asking for it.
 
@@ -36,7 +40,9 @@ Every write is **draft-first** — it prints what it *would* do and requires an 
 ## Requirements
 
 - **Node.js 20+** and npm.
-- The Google tools (`drive-axi`, `gmail-axi`) additionally need a Google Cloud OAuth client — a 5-minute one-time setup, see [`docs/SETUP.md`](docs/SETUP.md).
+- The Google tools (`drive-axi`, `gmail-axi`, `google-calendar-axi`) additionally need a Google Cloud OAuth client — a 5-minute one-time setup, see [`docs/SETUP.md`](docs/SETUP.md).
+- `mongo-axi` needs a MongoDB connection string (Atlas or your own `mongod`).
+- `chrome-devtools-axi` needs a Chromium/Chrome install reachable on this machine.
 
 ## Install
 
@@ -45,7 +51,7 @@ git clone <this-repo> axi-suite && cd axi-suite
 ./install.sh
 ```
 
-`install.sh` runs `npm install` and `npm link` in each tool, giving you five global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from npm.
+`install.sh` runs `npm install` and `npm link` in each tool, giving you nine global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`, `google-calendar-axi`, `mongo-axi`, `figma-axi`, `chrome-devtools-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from npm.
 
 ## Authenticate (each person uses their own credentials)
 
@@ -56,7 +62,10 @@ Run `auth login` once per tool — it prompts for a token with hidden paste and 
 | `clickup-axi auth login` | ClickUp → Settings → Apps → **API Token** (`pk_…`) |
 | `supabase-axi auth login` | Supabase → Account → **Access Tokens** (`sbp_…`) |
 | `slack-axi auth login` | Slack **user token** (`xoxp-…`) from your own Slack app — see [`docs/SETUP.md`](docs/SETUP.md) |
-| `drive-axi auth login` / `gmail-axi auth login` | Runs Google OAuth consent in your browser — see [`docs/SETUP.md`](docs/SETUP.md) first |
+| `drive-axi auth login` / `gmail-axi auth login` / `google-calendar-axi auth login` | Runs Google OAuth consent in your browser (any one of the three authorizes all three) — see [`docs/SETUP.md`](docs/SETUP.md) first |
+| `mongo-axi auth login` | Paste a MongoDB connection string (`mongodb://` or `mongodb+srv://`) |
+| `figma-axi auth login` | Figma → Settings → **Personal access tokens** (`figd_…`) |
+| `chrome-devtools-axi auth login` | No token — checks connectivity to a local Chrome/Chromium `--remote-debugging-port` (default `http://localhost:9222`) and remembers it |
 
 Verify: `clickup-axi` (or any tool with no args) prints a dashboard.
 
@@ -65,10 +74,11 @@ Verify: `clickup-axi` (or any tool with no args) prints a dashboard.
 Each tool ships a skill so the agent discovers and prefers it automatically — one command registers it with **every** skills-capable agent found on your machine (Claude Code at `~/.claude/`, Codex at `~/.codex/`; it skips whichever isn't installed):
 
 ```bash
-clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill
+clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill && \
+google-calendar-axi skill && mongo-axi skill && figma-axi skill && chrome-devtools-axi skill
 ```
 
-This writes `~/.claude/skills/<tool>/SKILL.md` and/or `~/.codex/skills/<tool>/SKILL.md`. Restart your agent session afterward to pick it up. Now when you ask about ClickUp/Supabase/Slack/Drive/Gmail, the agent reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
+This writes `~/.claude/skills/<tool>/SKILL.md` and/or `~/.codex/skills/<tool>/SKILL.md`. Restart your agent session afterward to pick it up. Now when you ask about any of these connectors, the agent reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
 
 Reference copies of exactly what each tool registers live in [`skills/`](skills/) — the canonical source is each tool's `src/skill.js`.
 
@@ -83,6 +93,8 @@ bun build ./bin/clickup-axi.js --compile --minify \
 ```
 
 Point your global symlink at the resulting binary. Trade-offs: ~60MB each, platform-specific (rebuild per OS/arch). The Node install above is cross-platform and the recommended default.
+
+**`mongo-axi` can't currently be compiled this way** — the `mongodb` driver's dependency chain calls `node:v8`'s `isBuildingSnapshot`, which Bun's compiled-binary runtime doesn't implement (`NotImplementedError: ERR_NOT_IMPLEMENTED`). Run it via the Node script (`npm link`, no `--compile`) until Bun adds that API or the driver drops the dependency on it.
 
 ## Notes
 

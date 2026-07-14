@@ -9,6 +9,9 @@ import { AxiError } from "./errors.js";
 import { renderOutput, renderHelp } from "./toon.js";
 
 const DIR = join(homedir(), ".config", "google-axi");
+// Duplicated per-tool by design (each tool is self-contained/copyable) — the
+// real source of truth for this list is drive-axi/src/auth.js. Keep the two
+// in sync if a scope is ever added or removed.
 const SCOPES = [
   "https://www.googleapis.com/auth/drive.readonly",
   "https://www.googleapis.com/auth/gmail.readonly",

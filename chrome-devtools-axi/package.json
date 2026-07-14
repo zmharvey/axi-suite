@@ -1,0 +1,23 @@
+{
+  "name": "chrome-devtools-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant Chrome DevTools CLI — token-efficient TOON output, session-based browser driving, fewer tokens than the chrome-devtools MCP.",
+  "type": "module",
+  "bin": {
+    "chrome-devtools-axi": "./bin/chrome-devtools-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8",
+    "puppeteer-core": "^25.3.0"
+  }
+}
