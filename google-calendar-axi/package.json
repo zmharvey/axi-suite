@@ -1,0 +1,22 @@
+{
+  "name": "google-calendar-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant Google Calendar CLI — token-efficient TOON output, contextual next-step hints. Shares Google OAuth with drive-axi/gmail-axi.",
+  "type": "module",
+  "bin": {
+    "google-calendar-axi": "./bin/google-calendar-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8"
+  }
+}

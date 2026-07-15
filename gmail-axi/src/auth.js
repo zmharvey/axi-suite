@@ -1,6 +1,6 @@
 // Google OAuth consent as a command — (re)mints the shared refresh token used by
-// BOTH drive-axi and gmail-axi. Run it interactively: it prints a URL, you approve
-// in the browser, and it saves ~/.config/google-axi/token.json.
+// drive-axi, gmail-axi, and google-calendar-axi. Run it interactively: it prints
+// a URL, you approve in the browser, and it saves ~/.config/google-axi/token.json.
 import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -13,11 +13,13 @@ const SCOPES = [
   "https://www.googleapis.com/auth/drive.readonly",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.compose",
+  "https://www.googleapis.com/auth/calendar.events",
 ].join(" ");
 
 export const AUTH_HELP = `usage: auth <login|logout>
-  login   run the Google OAuth consent flow (Drive + Gmail scopes); stores the
-          shared refresh token used by both drive-axi and gmail-axi
+  login   run the Google OAuth consent flow (Drive + Gmail + Calendar scopes);
+          stores the shared refresh token used by drive-axi, gmail-axi, and
+          google-calendar-axi
   logout  remove the stored token`;
 
 export async function authCommand(args) {
@@ -35,7 +37,7 @@ export async function authCommand(args) {
     creds = JSON.parse(readFileSync(join(DIR, "oauth.json"), "utf8"));
   } catch {
     throw new AxiError("Missing OAuth client at ~/.config/google-axi/oauth.json", "AUTH", [
-      'Add {"clientId":"…","clientSecret":"…"} from a Google Cloud OAuth "Desktop app" client',
+      'Add {"client_id":"…","client_secret":"…"} from a Google Cloud OAuth "Desktop app" client',
     ]);
   }
   return await new Promise((resolve) => {
@@ -57,8 +59,8 @@ export async function authCommand(args) {
       }
       const body = new URLSearchParams({
         code,
-        client_id: creds.clientId,
-        client_secret: creds.clientSecret,
+        client_id: creds.client_id,
+        client_secret: creds.client_secret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       });
@@ -80,18 +82,18 @@ export async function authCommand(args) {
       );
       res.end("Authorized — token saved. You can close this tab and return to the terminal.");
       server.close();
-      resolve(renderOutput(["authorized: saved ~/.config/google-axi/token.json", renderHelp(["Both drive-axi and gmail-axi now work"])]));
+      resolve(renderOutput(["authorized: saved ~/.config/google-axi/token.json", renderHelp(["drive-axi, gmail-axi, and google-calendar-axi now work"])]));
     });
     server.listen(0, "127.0.0.1", () => {
       redirectUri = `http://127.0.0.1:${server.address().port}`;
       const auth = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-      auth.searchParams.set("client_id", creds.clientId);
+      auth.searchParams.set("client_id", creds.client_id);
       auth.searchParams.set("redirect_uri", redirectUri);
       auth.searchParams.set("response_type", "code");
       auth.searchParams.set("scope", SCOPES);
       auth.searchParams.set("access_type", "offline");
       auth.searchParams.set("prompt", "consent");
-      process.stdout.write(`\nOpen this URL and approve (Drive + Gmail):\n\n${auth.toString()}\n\nWaiting for authorization… (Ctrl-C to cancel)\n`);
+      process.stdout.write(`\nOpen this URL and approve (Drive + Gmail + Calendar):\n\n${auth.toString()}\n\nWaiting for authorization… (Ctrl-C to cancel)\n`);
     });
     setTimeout(() => {
       try {
