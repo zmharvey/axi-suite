@@ -8,7 +8,7 @@ which writes the file to `~/.claude/skills/<tool>/SKILL.md` on your machine:
 
 ```bash
 clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill && \
-google-calendar-axi skill && chrome-devtools-axi skill
+google-calendar-axi skill && chrome-devtools-axi skill && github-axi skill
 ```
 
 The copies here are committed only so you can see what gets registered without running

@@ -4,7 +4,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-TOOLS=(clickup-axi supabase-axi slack-axi drive-axi gmail-axi google-calendar-axi chrome-devtools-axi)
+TOOLS=(clickup-axi supabase-axi slack-axi drive-axi gmail-axi google-calendar-axi chrome-devtools-axi github-axi)
 
 for t in "${TOOLS[@]}"; do
   echo "── installing $t ──"

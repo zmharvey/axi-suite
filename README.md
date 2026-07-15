@@ -1,6 +1,6 @@
 # AXI Suite
 
-Seven **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, Gmail, Google Calendar, and Chrome DevTools. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
+Eight **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, Gmail, Google Calendar, Chrome DevTools, and GitHub. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
 
 ## Why this exists
 
@@ -15,7 +15,7 @@ Measured across the whole fleet, all connectors enabled (the realistic case), sa
 | Input tokens / task | 87,839 | **5,904** (93% lower) |
 | Task success | 72% | **89%** |
 
-Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation). These numbers predate `google-calendar-axi`/`chrome-devtools-axi` — the shape of the result holds (fixed per-connector MCP schema tax vs. one small always-on CLI tool), but the exact figures above haven't been re-measured against the full seven-tool set yet.
+Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation). These numbers predate `google-calendar-axi`/`chrome-devtools-axi`/`github-axi` — the shape of the result holds (fixed per-connector MCP schema tax vs. one small always-on CLI tool), but the exact figures above haven't been re-measured against the full eight-tool set yet.
 
 ## The tools
 
@@ -28,10 +28,9 @@ Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) 
 | `gmail-axi` | Gmail API | search, read, thread | `draft` (never sends) |
 | `google-calendar-axi` | Google Calendar API | today, calendars, events list/view | `events create`/`delete` (draft-first) |
 | `chrome-devtools-axi` | Chrome DevTools Protocol (via a local session) | session, navigate, screenshot, content | `click`/`type`/`eval` — acts on a live page, no dry-run |
+| `github-axi` | wraps the `gh` CLI (no separate auth) | repo, pr list/view/checks, issue list/view | `pr create`, `issue create`/`comment` (draft-first) |
 
 Every write is **draft-first** — it prints what it *would* do and requires an explicit `--confirm` to act. Nothing mutates or sends without you asking for it.
-
-> For GitHub, use the community [`gh-axi`](https://www.npmjs.com/package/gh-axi) (`npm i -g gh-axi`) — same idea, wraps the `gh` CLI.
 
 **Scope:** these aren't 1:1 MCP replacements — they cover the day-to-day (search, read, create, update, plus the extras above) rather than every admin operation each MCP exposes (e.g. ClickUp docs/folders/tags/dependencies, Supabase branching/logs/project lifecycle, Slack canvases/reactions/scheduling, Gmail labels). Keep the relevant MCP connector around for anything not listed here — or open an issue/PR if there's a specific command you want added, the shell is built to make that quick.
 
@@ -40,6 +39,7 @@ Every write is **draft-first** — it prints what it *would* do and requires an 
 - **Node.js 20+** and npm.
 - The Google tools (`drive-axi`, `gmail-axi`, `google-calendar-axi`) additionally need a Google Cloud OAuth client — a 5-minute one-time setup, see [`docs/SETUP.md`](docs/SETUP.md).
 - `chrome-devtools-axi` needs a Chromium/Chrome install reachable on this machine.
+- `github-axi` needs the [`gh`](https://cli.github.com) CLI installed and authenticated (`gh auth status`) — it has no auth of its own.
 
 ## Install
 
@@ -48,7 +48,7 @@ git clone <this-repo> axi-suite && cd axi-suite
 ./install.sh
 ```
 
-`install.sh` runs `npm install` and `npm link` in each tool, giving you seven global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`, `google-calendar-axi`, `chrome-devtools-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from npm.
+`install.sh` runs `npm install` and `npm link` in each tool, giving you eight global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`, `google-calendar-axi`, `chrome-devtools-axi`, `github-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from npm.
 
 ## Authenticate (each person uses their own credentials)
 
@@ -61,6 +61,7 @@ Run `auth login` once per tool — it prompts for a token with hidden paste and 
 | `slack-axi auth login` | Slack **user token** (`xoxp-…`) from your own Slack app — see [`docs/SETUP.md`](docs/SETUP.md) |
 | `drive-axi auth login` / `gmail-axi auth login` / `google-calendar-axi auth login` | Runs Google OAuth consent in your browser (any one of the three authorizes all three) — see [`docs/SETUP.md`](docs/SETUP.md) first |
 | `chrome-devtools-axi auth login` | No token — checks connectivity to a local Chrome/Chromium `--remote-debugging-port` (default `http://localhost:9222`) and remembers it |
+| `github-axi auth login` | No token of its own — proxies to `gh auth login`. Already works if `gh auth status` does. |
 
 Verify: `clickup-axi` (or any tool with no args) prints a dashboard.
 
@@ -70,7 +71,7 @@ Each tool ships a skill so the agent discovers and prefers it automatically — 
 
 ```bash
 clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill && \
-google-calendar-axi skill && chrome-devtools-axi skill
+google-calendar-axi skill && chrome-devtools-axi skill && github-axi skill
 ```
 
 This writes `~/.claude/skills/<tool>/SKILL.md` and/or `~/.codex/skills/<tool>/SKILL.md`. Restart your agent session afterward to pick it up. Now when you ask about any of these connectors, the agent reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.

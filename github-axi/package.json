@@ -1,0 +1,22 @@
+{
+  "name": "github-axi",
+  "version": "0.1.0",
+  "description": "AXI-compliant GitHub CLI — wraps the gh CLI (no separate auth), token-efficient TOON output, contextual next-step hints.",
+  "type": "module",
+  "bin": {
+    "github-axi": "./bin/github-axi.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.8"
+  }
+}
