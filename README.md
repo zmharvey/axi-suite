@@ -1,6 +1,8 @@
 # AXI Suite
 
-Eight **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, Gmail, Google Calendar, Chrome DevTools, and GitHub. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
+Six **agent-ergonomic CLIs** for the connectors you use every day — ClickUp, Supabase, Slack, Google Drive, Gmail, and Google Calendar. They exist to be driven by an AI agent (Claude Code, Cursor, etc.) instead of the equivalent MCP connectors, and they are dramatically cheaper on tokens because the agent never pays to load a big tool schema.
+
+For **GitHub** and **Chrome DevTools**, use the canonical [`gh-axi`](https://github.com/kunchenguid/gh-axi) and [`chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) from the AXI project itself (`bun add -g gh-axi chrome-devtools-axi`) — same idea, already maintained upstream, no reason to re-implement them here.
 
 ## Why this exists
 
@@ -15,7 +17,7 @@ Measured across the whole fleet, all connectors enabled (the realistic case), sa
 | Input tokens / task | 87,839 | **5,904** (93% lower) |
 | Task success | 72% | **89%** |
 
-Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation). These numbers predate `google-calendar-axi`/`chrome-devtools-axi`/`github-axi` — the shape of the result holds (fixed per-connector MCP schema tax vs. one small always-on CLI tool), but the exact figures above haven't been re-measured against the full eight-tool set yet.
+Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) in any browser (self-contained, works offline; tabs per connector + a daily-usage simulation). These numbers predate `google-calendar-axi` — the shape of the result holds (fixed per-connector MCP schema tax vs. one small always-on CLI tool), but the exact figures above haven't been re-measured against the current tool set yet.
 
 ## The tools
 
@@ -27,8 +29,8 @@ Full interactive write-up — open [`docs/benchmark.html`](docs/benchmark.html) 
 | `drive-axi` | Google Drive API | recent, search, ls, read | — read-only |
 | `gmail-axi` | Gmail API | search, read, thread | `draft` (never sends) |
 | `google-calendar-axi` | Google Calendar API | today, calendars, events list/view | `events create`/`delete` (draft-first) |
-| `chrome-devtools-axi` | Chrome DevTools Protocol (via a local session) | session, navigate, screenshot, content | `click`/`type`/`eval` — acts on a live page, no dry-run |
-| `github-axi` | wraps the `gh` CLI (no separate auth) | repo, pr list/view/checks, issue list/view | `pr create`, `issue create`/`comment` (draft-first) |
+
+> For GitHub and Chrome DevTools, install the canonical [`gh-axi`](https://github.com/kunchenguid/gh-axi) and [`chrome-devtools-axi`](https://github.com/kunchenguid/chrome-devtools-axi) (`bun add -g gh-axi chrome-devtools-axi`) — same shape, maintained upstream by the AXI project.
 
 Every write is **draft-first** — it prints what it *would* do and requires an explicit `--confirm` to act. Nothing mutates or sends without you asking for it.
 
@@ -36,10 +38,8 @@ Every write is **draft-first** — it prints what it *would* do and requires an 
 
 ## Requirements
 
-- **Node.js 20+** and npm.
+- **[Bun](https://bun.sh) 1.1+.** This suite is bun-only — bun installs deps, compiles the binaries, and runs the tools. No npm, no Node install required.
 - The Google tools (`drive-axi`, `gmail-axi`, `google-calendar-axi`) additionally need a Google Cloud OAuth client — a 5-minute one-time setup, see [`docs/SETUP.md`](docs/SETUP.md).
-- `chrome-devtools-axi` needs a Chromium/Chrome install reachable on this machine.
-- `github-axi` needs the [`gh`](https://cli.github.com) CLI installed and authenticated (`gh auth status`) — it has no auth of its own.
 
 ## Install
 
@@ -48,7 +48,13 @@ git clone <this-repo> axi-suite && cd axi-suite
 ./install.sh
 ```
 
-`install.sh` runs `npm install` and `npm link` in each tool, giving you eight global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`, `google-calendar-axi`, `chrome-devtools-axi`, `github-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from npm.
+`install.sh` runs `bun install` in each tool, compiles each to a **standalone binary** with `bun build --compile`, and symlinks it onto your `PATH` — giving you six fast global commands: `clickup-axi`, `supabase-axi`, `slack-axi`, `drive-axi`, `gmail-axi`, `google-calendar-axi`. Deps (`axi-sdk-js`, `@toon-format/toon`) come from the npm registry via bun. Compiled binaries start in ~10ms vs ~24ms for the script path.
+
+For GitHub and Chrome DevTools, grab the canonical upstream tools the same way bun handles everything else:
+
+```bash
+bun add -g gh-axi chrome-devtools-axi
+```
 
 ## Authenticate (each person uses their own credentials)
 
@@ -60,8 +66,6 @@ Run `auth login` once per tool — it prompts for a token with hidden paste and 
 | `supabase-axi auth login` | Supabase → Account → **Access Tokens** (`sbp_…`) |
 | `slack-axi auth login` | Slack **user token** (`xoxp-…`) from your own Slack app — see [`docs/SETUP.md`](docs/SETUP.md) |
 | `drive-axi auth login` / `gmail-axi auth login` / `google-calendar-axi auth login` | Runs Google OAuth consent in your browser (any one of the three authorizes all three) — see [`docs/SETUP.md`](docs/SETUP.md) first |
-| `chrome-devtools-axi auth login` | No token — checks connectivity to a local Chrome/Chromium `--remote-debugging-port` (default `http://localhost:9222`) and remembers it |
-| `github-axi auth login` | No token of its own — proxies to `gh auth login`. Already works if `gh auth status` does. |
 
 Verify: `clickup-axi` (or any tool with no args) prints a dashboard.
 
@@ -71,24 +75,27 @@ Each tool ships a skill so the agent discovers and prefers it automatically — 
 
 ```bash
 clickup-axi skill && supabase-axi skill && slack-axi skill && drive-axi skill && gmail-axi skill && \
-google-calendar-axi skill && chrome-devtools-axi skill && github-axi skill
+google-calendar-axi skill
 ```
+
+(`gh-axi` and `chrome-devtools-axi` register their own skills the same way — run `gh-axi skill` / `chrome-devtools-axi skill` after installing them.)
 
 This writes `~/.claude/skills/<tool>/SKILL.md` and/or `~/.codex/skills/<tool>/SKILL.md`. Restart your agent session afterward to pick it up. Now when you ask about any of these connectors, the agent reaches for the CLI instead of the MCP. If you also want to reclaim the context, disable the corresponding MCP connectors for that project.
 
 Reference copies of exactly what each tool registers live in [`skills/`](skills/) — the canonical source is each tool's `src/skill.js`.
 
-## Optional: compile to standalone binaries
+## Rebuilding a binary
 
-Slightly faster cold start (~10ms vs ~24ms). Requires [Bun](https://bun.sh):
+`install.sh` compiles every tool for you, but if you change a tool's source and want to rebuild just that one:
 
 ```bash
 cd clickup-axi
+bun install
 bun build ./bin/clickup-axi.js --compile --minify \
   --define 'process.env.AXI_VERSION="0.1.0"' --outfile clickup-axi-bin
 ```
 
-Point your global symlink at the resulting binary. Trade-offs: ~60MB each, platform-specific (rebuild per OS/arch). The Node install above is cross-platform and the recommended default.
+Then re-point your `PATH` symlink at the resulting binary (or just re-run `./install.sh`, which is idempotent). Trade-offs: the binaries are ~60MB each and platform-specific — rebuild per OS/arch, which is exactly what running `install.sh` on each machine does.
 
 ## Notes
 

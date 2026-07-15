@@ -1,6 +1,9 @@
 node_modules/
-# compiled Bun binaries (platform-specific, build locally)
+# compiled Bun binaries (platform-specific — install.sh builds them per machine)
 *-bin
+# bun lockfiles are generated per-install; keep the repo lockfile-free (as it was with npm)
+bun.lock
+bun.lockb
 # never commit secrets or local config
 .env
 *.token
