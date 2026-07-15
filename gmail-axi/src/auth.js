@@ -37,7 +37,7 @@ export async function authCommand(args) {
     creds = JSON.parse(readFileSync(join(DIR, "oauth.json"), "utf8"));
   } catch {
     throw new AxiError("Missing OAuth client at ~/.config/google-axi/oauth.json", "AUTH", [
-      'Add {"clientId":"…","clientSecret":"…"} from a Google Cloud OAuth "Desktop app" client',
+      'Add {"client_id":"…","client_secret":"…"} from a Google Cloud OAuth "Desktop app" client',
     ]);
   }
   return await new Promise((resolve) => {
@@ -59,8 +59,8 @@ export async function authCommand(args) {
       }
       const body = new URLSearchParams({
         code,
-        client_id: creds.clientId,
-        client_secret: creds.clientSecret,
+        client_id: creds.client_id,
+        client_secret: creds.client_secret,
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       });
@@ -87,7 +87,7 @@ export async function authCommand(args) {
     server.listen(0, "127.0.0.1", () => {
       redirectUri = `http://127.0.0.1:${server.address().port}`;
       const auth = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-      auth.searchParams.set("client_id", creds.clientId);
+      auth.searchParams.set("client_id", creds.client_id);
       auth.searchParams.set("redirect_uri", redirectUri);
       auth.searchParams.set("response_type", "code");
       auth.searchParams.set("scope", SCOPES);

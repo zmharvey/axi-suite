@@ -29,10 +29,10 @@ export async function getAccessToken() {
     cached = { access_token: tok.access_token, expiry: tok.expiry };
     return tok.access_token;
   }
-  const { clientId, clientSecret } = loadJson("oauth.json", "oauth.json");
+  const { client_id, client_secret } = loadJson("oauth.json", "oauth.json");
   const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
+    client_id,
+    client_secret,
     refresh_token: tok.refresh_token,
     grant_type: "refresh_token",
   });
